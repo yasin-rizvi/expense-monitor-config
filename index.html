@@ -297,8 +297,9 @@
       <h1>Control Room</h1>
       <p>
         Yahan se shipped app chalti hai &mdash; bina nayi APK ke. Switch dabao,
-        <b>GitHub par bhejo</b>, aur badlav 5&ndash;15 minute me un phones tak
-        pahunch jaata hai jo app kholte hain.
+        <b>GitHub par bhejo</b>, aur badlav agli baar app khulne par
+        <b>turant</b> lag jaata hai. Jo app pehle se khuli padi hai, us par
+        10 minute ke andar.
       </p>
     </div>
     <div class="target">
@@ -310,12 +311,12 @@
 
   <section class="card" id="notShipped" style="margin-top:20px" hidden>
     <div class="note bad" style="border-top:0">
-      <span class="mark">abhi nahi</span>
+      <span class="mark">sirf test</span>
       <span>
-        <b>Koi phone ye file abhi padhta nahi.</b> Config padhne wala code app me
-        aa chuka hai par kisi shipped APK me nahi gaya. Yahan se save karna is
-        waqt sirf GitHub par file badalta hai &mdash; phone par kuch nahi hota.
-        Wo nayi APK ship hone ke baad shuru hoga.
+        <b>Ye file abhi sirf test phone padhta hai.</b> Config padhne wala code
+        bana hua build me maujood hai, par wo build abhi kisi user tak nahi
+        gayi &mdash; Play Store par kuch nahi hai. To yahan se save karna is
+        waqt sirf aap ke test phone par asar karta hai.
       </span>
     </div>
   </section>
@@ -578,8 +579,10 @@
 
   <footer class="page">
     Panel aur config ek hi repo me hain, isliye panel apni hi settings edit karta hai.
-    App is file ko har launch par padhta hai &mdash; GitHub ka CDN ~5 minute cache karta
-    hai, to badlav turant nahi, thodi der me pahunchta hai.
+    App is file ko <b>har launch par</b> padhta hai, aur khuli rehne par har 10 minute
+    me dobara. Request CDN ki purani copy nahi leti, aur kho jaaye to teen baar koshish
+    karti hai &mdash; pehle ek hi koshish thi, aur wo kho jaati to poori session purani
+    settings par nikal jaati thi.
   </footer>
 </div>
 
@@ -759,8 +762,8 @@
       savedNotice = noticeText();
       stamp();
       foot(SHIPPED
-        ? "Bhej diya. Phones tak 5–15 minute me pahunchega."
-        : "Bhej diya — file GitHub par badal gayi. Phone par abhi kuch nahi hoga: config padhne wali APK ship nahi hui.", "good");
+        ? "Bhej diya. App kholne par turant, khuli app par 10 minute ke andar."
+        : "Bhej diya. Test phone par app kholte hi dikhega — baaki users tak tab, jab ye build unke paas jaayegi.", "good");
       note(false);
     } catch (err) {
       foot("Nahi bhej saka — " + (err.message || err), "bad");
