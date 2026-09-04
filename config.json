@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "ads": {
-    "on": false,
+    "on": true,
     "testMode": false,
     "banner": {
       "on": true,
