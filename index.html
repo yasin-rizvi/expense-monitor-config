@@ -308,6 +308,18 @@
     </div>
   </header>
 
+  <section class="card" id="notShipped" style="margin-top:20px" hidden>
+    <div class="note bad" style="border-top:0">
+      <span class="mark">abhi nahi</span>
+      <span>
+        <b>Koi phone ye file abhi padhta nahi.</b> Config padhne wala code app me
+        aa chuka hai par kisi shipped APK me nahi gaya. Yahan se save karna is
+        waqt sirf GitHub par file badalta hai &mdash; phone par kuch nahi hota.
+        Wo nayi APK ship hone ke baad shuru hoga.
+      </span>
+    </div>
+  </section>
+
   <div class="cols">
     <div class="stack">
 
@@ -576,6 +588,12 @@
 
   var TOKEN_KEY = "emcr.token";
 
+  /* Has a build that READS this file actually reached phones yet?
+     Until it has, the panel writes a file nobody is listening to, and saying
+     "pahunch jaayega" would be a straight lie. Flip this to true with the
+     release that carries RemoteConfigService. */
+  var SHIPPED = false;
+
   /* Google's own units. Always fill, earn nothing, safe to tap. */
   var TEST = {
     banner:       "ca-app-pub-3940256099942544/6300978111",
@@ -659,6 +677,7 @@
         loaded = true;
         state = clone(DEFAULTS);
         savedNotice = noticeText();
+        stamp();
         fill();
         connOk("file abhi nahi hai");
         note(false);
@@ -689,6 +708,7 @@
 
       loaded = true;
       savedNotice = noticeText();
+      stamp();
       fill();
       render();
     } catch (err) {
@@ -725,8 +745,10 @@
       var out = await res.json();
       sha = (out.content && out.content.sha) || sha;
       savedNotice = noticeText();
-      $("shaLabel").textContent = "sha " + String(sha).slice(0, 7);
-      foot("Bhej diya. Phones tak 5–15 minute me pahunchega.", "good");
+      stamp();
+      foot(SHIPPED
+        ? "Bhej diya. Phones tak 5–15 minute me pahunchega."
+        : "Bhej diya — file GitHub par badal gayi. Phone par abhi kuch nahi hoga: config padhne wali APK ship nahi hui.", "good");
       note(false);
     } catch (err) {
       foot("Nahi bhej saka — " + (err.message || err), "bad");
@@ -1024,6 +1046,17 @@
     el.textContent = text;
   }
 
+  /* The version line under the file name. Its job is to answer "is what I am
+     looking at the file that is actually up there", so it has to change on
+     every load and every save, not only on a save. */
+  function stamp() {
+    var t = new Date();
+    var clock = t.getHours() + ":" + String(t.getMinutes()).padStart(2, "0");
+    $("shaLabel").textContent = sha
+      ? "sha " + String(sha).slice(0, 7) + " · " + clock
+      : "file abhi bani nahi · " + clock;
+  }
+
   function connBusy() { chip($("cConn"), "off", "padh raha hun…"); }
   function connOk(t)  { chip($("cConn"), "on", t); }
   function connFail() { chip($("cConn"), "dead", "nahi mila"); }
@@ -1095,6 +1128,8 @@
   }
 
   /* ---------------------------------------------------------- start --- */
+
+  $("notShipped").hidden = SHIPPED;
 
   fill();
   render();
