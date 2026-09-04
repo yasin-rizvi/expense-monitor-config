@@ -432,6 +432,17 @@
             </span>
             <input type="number" class="num" id="free" min="1" max="1440" aria-label="Ad free minutes">
           </div>
+          <div class="row">
+            <span class="label">
+              <strong>Naye user ko kitne din chhod do</strong>
+              <span>
+                Nayi install par itne din koi ad nahi. 0 = pehle din se ads.
+                Purane users par asar nahi &mdash; unki install ki tareekh app
+                ko maloom hi nahi, to unhe grace nahi milta.
+              </span>
+            </span>
+            <input type="number" class="num" id="grace" min="0" max="365" aria-label="Grace days">
+          </div>
           <div class="row stacked">
             <div class="head">
               <span class="label">
@@ -614,7 +625,8 @@
       gapMinutes: 3,
       freeMinutes: 20,
       fromHour: 0,
-      toHour: 0
+      toHour: 0,
+      graceDays: 0
     },
     features: { scanner: true, invoices: true, driveBackup: true },
     notice: { id: "", title: "", body: "", buttonText: "", buttonUrl: "" }
@@ -823,6 +835,7 @@
       if (typeof a.freeMinutes === "number") out.ads.freeMinutes = clampInt(a.freeMinutes, 1, 1440);
       if (typeof a.fromHour === "number") out.ads.fromHour = clampInt(a.fromHour, 0, 23);
       if (typeof a.toHour === "number") out.ads.toHour = clampInt(a.toHour, 0, 23);
+      if (typeof a.graceDays === "number") out.ads.graceDays = clampInt(a.graceDays, 0, 365);
       UNITS.forEach(function (u) {
         var unit = a[u.key];
         if (unit && typeof unit === "object") {
@@ -917,6 +930,7 @@
   });
 
   bindNum("gap",   function (n) { state.ads.gapMinutes = n; }, 0, 240);
+  bindNum("grace", function (n) { state.ads.graceDays = n; }, 0, 365);
   bindNum("free",  function (n) { state.ads.freeMinutes = n; }, 1, 1440);
   bindNum("fromH", function (n) { state.ads.fromHour = n; }, 0, 23);
   bindNum("toH",   function (n) { state.ads.toHour = n; }, 0, 23);
@@ -965,6 +979,7 @@
     });
     $("gap").value = state.ads.gapMinutes;
     $("free").value = state.ads.freeMinutes;
+    $("grace").value = state.ads.graceDays;
 
     var hours = state.ads.fromHour !== state.ads.toHour;
     $("hoursOn").checked = hours;
@@ -1018,7 +1033,8 @@
         gapMinutes: state.ads.gapMinutes,
         freeMinutes: state.ads.freeMinutes,
         fromHour: state.ads.fromHour,
-        toHour: state.ads.toHour
+        toHour: state.ads.toHour,
+        graceDays: state.ads.graceDays
       },
       features: {
         scanner: state.features.scanner,
