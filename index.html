@@ -1,0 +1,1105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Expense Monitor Control Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif&family=DM+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --paper:     #EFF3F0;
+    --panel:     #FFFFFF;
+    --panel-2:   #E5EBE7;
+    --ink:       #0E1614;
+    --ink-soft:  #4A5A54;
+    --ink-faint: #7E8F88;
+    --line:      #D6DFDA;
+    --line-soft: #E7EDEA;
+    --go:        #157F52;
+    --go-dim:    #D5E9DE;
+    --on-go:     #FFFFFF;
+    --warn:      #A66A0B;
+    --warn-dim:  #F3E6CD;
+    --stop:      #A03A2C;
+    --stop-dim:  #F2DBD6;
+    --code-bg:   #14201C;
+    --code-ink:  #D8E6E0;
+    --code-key:  #7FD3AA;
+    --field:     #F7FAF8;
+    --shadow:    0 1px 2px rgba(14,22,20,.06), 0 12px 32px -22px rgba(14,22,20,.55);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:     #070D0B;
+      --panel:     #101815;
+      --panel-2:   #17211D;
+      --ink:       #E4EDE8;
+      --ink-soft:  #9DAFA7;
+      --ink-faint: #6B7D76;
+      --line:      #1F2B26;
+      --line-soft: #18221E;
+      --go:        #4ECB93;
+      --go-dim:    #0F2E20;
+      --on-go:     #04140D;
+      --warn:      #E0A94B;
+      --warn-dim:  #33260D;
+      --stop:      #E2705C;
+      --stop-dim:  #331610;
+      --code-bg:   #0A100E;
+      --code-ink:  #C7D8D1;
+      --code-key:  #64C79B;
+      --field:     #0B1210;
+      --shadow:    0 1px 2px rgba(0,0,0,.5), 0 14px 34px -24px rgba(0,0,0,.9);
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  /* The UA's own [hidden] rule loses to any class selector that sets display,
+     and half the controls here are hidden with the attribute. Without this the
+     warnings and the collapsed fields are all visible at once, permanently. */
+  [hidden] { display: none !important; }
+
+  html { color-scheme: light dark; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 400 15px/1.55 "Instrument Sans", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 16px 64px; }
+
+  /* ---------------------------------------------------------- masthead */
+
+  .mast {
+    display: flex; flex-wrap: wrap; align-items: flex-end;
+    justify-content: space-between; gap: 14px;
+    padding-bottom: 16px; border-bottom: 1px solid var(--line);
+  }
+
+  .eyebrow {
+    font: 500 11px/1 "DM Mono", ui-monospace, monospace;
+    letter-spacing: .13em; text-transform: uppercase; color: var(--ink-faint);
+  }
+
+  h1 {
+    margin: 8px 0 0;
+    font: 400 34px/1.05 "Instrument Serif", Georgia, serif;
+    letter-spacing: -.01em; text-wrap: balance;
+  }
+
+  .mast p { margin: 6px 0 0; max-width: 54ch; color: var(--ink-soft); font-size: 14px; }
+
+  .target {
+    display: flex; flex-direction: column; gap: 4px; align-items: flex-start;
+    font: 400 12px/1.4 "DM Mono", ui-monospace, monospace; color: var(--ink-faint);
+  }
+  .target b { font-weight: 500; color: var(--ink-soft); word-break: break-all; }
+
+  /* -------------------------------------------------------------- grid */
+
+  .cols { display: grid; grid-template-columns: 1fr; gap: 20px; margin-top: 20px; }
+  @media (min-width: 1000px) {
+    .cols { grid-template-columns: minmax(0, 1fr) 356px; align-items: start; }
+    .rail { position: sticky; top: 18px; }
+  }
+  .stack { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+  /* ------------------------------------------------------------- cards */
+
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 12px; box-shadow: var(--shadow); overflow: hidden;
+  }
+
+  .card > header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 12px 16px;
+    background: var(--panel-2); border-bottom: 1px solid var(--line);
+  }
+  .card > header h2 { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: -.005em; }
+  .card > header .hint { font-size: 12px; color: var(--ink-faint); text-align: right; }
+
+  .rows { display: flex; flex-direction: column; }
+
+  .row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 16px; border-top: 1px solid var(--line-soft);
+  }
+  .rows > .row:first-child { border-top: 0; }
+
+  .row .label { flex: 1 1 auto; min-width: 0; }
+  .row .label strong { display: block; font-size: 14px; font-weight: 600; }
+  .row .label span {
+    display: block; margin-top: 2px; font-size: 12.5px;
+    color: var(--ink-faint); text-wrap: pretty;
+  }
+
+  .row.stacked { flex-direction: column; align-items: stretch; gap: 9px; }
+  .row.stacked .head { display: flex; align-items: center; gap: 14px; }
+  .row.stacked .head .label { flex: 1 1 auto; }
+
+  .row.off { background: var(--field); }
+  .row.off .label strong { color: var(--ink-faint); }
+
+  /* ------------------------------------------------------------ switch */
+
+  .sw {
+    appearance: none; flex: 0 0 auto;
+    width: 46px; height: 27px; border-radius: 999px;
+    background: var(--panel-2); border: 1px solid var(--line);
+    position: relative; cursor: pointer;
+    transition: background .16s ease, border-color .16s ease;
+  }
+  .sw::after {
+    content: ""; position: absolute; top: 2px; left: 2px;
+    width: 21px; height: 21px; border-radius: 50%;
+    background: var(--panel); box-shadow: 0 1px 3px rgba(0,0,0,.28);
+    transition: transform .16s ease;
+  }
+  .sw:checked { background: var(--go); border-color: var(--go); }
+  .sw:checked::after { transform: translateX(19px); }
+  .sw.danger:checked { background: var(--warn); border-color: var(--warn); }
+  .sw:focus-visible { outline: 2px solid var(--go); outline-offset: 2px; }
+
+  /* ------------------------------------------------------------ fields */
+
+  .txt, .num {
+    font: 400 13px/1.3 "DM Mono", ui-monospace, monospace;
+    color: var(--ink); background: var(--field);
+    border: 1px solid var(--line); border-radius: 7px;
+    padding: 9px 10px; width: 100%;
+  }
+  .num { width: 78px; text-align: center; flex: 0 0 auto; }
+  .txt:focus, .num:focus { outline: 2px solid var(--go); outline-offset: -1px; border-color: var(--go); }
+  .txt:disabled, .num:disabled { color: var(--ink-faint); cursor: not-allowed; }
+
+  .idline { display: flex; align-items: center; gap: 9px; }
+  .idline .pre { font: 400 13px/1 "DM Mono", ui-monospace, monospace; color: var(--ink-faint); flex: 0 0 auto; }
+
+  .serving {
+    margin-top: 6px; font: 400 11.5px/1.4 "DM Mono", ui-monospace, monospace;
+    color: var(--ink-faint); word-break: break-all;
+  }
+  .serving b { color: var(--warn); font-weight: 500; }
+
+  .inline { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; font-size: 13px; color: var(--ink-soft); }
+
+  /* ------------------------------------------------------------- chips */
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px; flex: 0 0 auto;
+    padding: 3px 9px; border-radius: 999px;
+    font: 500 11px/1.6 "DM Mono", ui-monospace, monospace;
+    letter-spacing: .04em; text-transform: uppercase;
+    border: 1px solid transparent; white-space: nowrap;
+  }
+  .chip.on   { background: var(--go-dim);   color: var(--go);   border-color: var(--go); }
+  .chip.off  { background: var(--panel-2);  color: var(--ink-faint); border-color: var(--line); }
+  .chip.test { background: var(--warn-dim); color: var(--warn); border-color: var(--warn); }
+  .chip.dead { background: var(--stop-dim); color: var(--stop); border-color: var(--stop); }
+
+  /* ------------------------------------------------------------- notes */
+
+  .note {
+    display: flex; gap: 10px; padding: 11px 16px;
+    background: var(--warn-dim); border-top: 1px solid var(--line-soft);
+    font-size: 12.5px; color: var(--ink-soft); text-wrap: pretty;
+  }
+  .note.bad { background: var(--stop-dim); }
+  .note.good { background: var(--go-dim); }
+  .note .mark {
+    flex: 0 0 auto;
+    font: 500 11px/1.5 "DM Mono", ui-monospace, monospace;
+    color: var(--warn); letter-spacing: .06em; text-transform: uppercase;
+  }
+  .note.bad .mark { color: var(--stop); }
+  .note.good .mark { color: var(--go); }
+
+  /* -------------------------------------------------------- buttons */
+
+  .btn {
+    font: 600 13px/1 "Instrument Sans", system-ui, sans-serif;
+    padding: 9px 13px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+  }
+  .btn:hover:not(:disabled) { border-color: var(--go); }
+  .btn:focus-visible { outline: 2px solid var(--go); outline-offset: 2px; }
+  .btn:disabled { opacity: .55; cursor: default; }
+
+  .push {
+    display: block; width: 100%; padding: 13px 14px; border: 0;
+    background: var(--go); color: var(--on-go);
+    font: 600 14px/1 "Instrument Sans", system-ui, sans-serif; cursor: pointer;
+  }
+  .push:hover:not(:disabled) { filter: brightness(1.06); }
+  .push:focus-visible { outline: 2px solid var(--ink); outline-offset: -3px; }
+  .push:disabled { background: var(--panel-2); color: var(--ink-faint); cursor: default; }
+
+  /* --------------------------------------------------------- json rail */
+
+  .json {
+    margin: 0; padding: 14px 16px;
+    background: var(--code-bg); color: var(--code-ink);
+    font: 400 12px/1.65 "DM Mono", ui-monospace, monospace;
+    overflow-x: auto; max-height: 42vh; overflow-y: auto;
+    white-space: pre; tab-size: 2;
+  }
+  .json .k { color: var(--code-key); }
+
+  .pushfoot { padding: 10px 16px 13px; font-size: 12px; color: var(--ink-faint); text-wrap: pretty; }
+  .pushfoot.bad { color: var(--stop); }
+  .pushfoot.good { color: var(--go); }
+
+  /* -------------------------------------------------------- never list */
+
+  .never { list-style: none; margin: 0; padding: 0; }
+  .never li {
+    display: flex; gap: 11px; padding: 11px 16px;
+    border-top: 1px solid var(--line-soft);
+    font-size: 13px; color: var(--ink-soft); text-wrap: pretty;
+  }
+  .never li:first-child { border-top: 0; }
+  .never code {
+    font: 400 12px/1.5 "DM Mono", ui-monospace, monospace;
+    color: var(--ink); background: var(--field);
+    border: 1px solid var(--line); border-radius: 4px; padding: 0 4px;
+    word-break: break-all;
+  }
+  .never .no {
+    flex: 0 0 auto; color: var(--stop);
+    font: 500 11px/1.55 "DM Mono", ui-monospace, monospace;
+  }
+
+  footer.page {
+    margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--line);
+    font-size: 12.5px; color: var(--ink-faint); text-wrap: pretty;
+  }
+  footer.page a { color: var(--go); }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="mast">
+    <div>
+      <div class="eyebrow">Expense Monitor &middot; com.trim.style</div>
+      <h1>Control Room</h1>
+      <p>
+        Yahan se shipped app chalti hai &mdash; bina nayi APK ke. Switch dabao,
+        <b>GitHub par bhejo</b>, aur badlav 5&ndash;15 minute me un phones tak
+        pahunch jaata hai jo app kholte hain.
+      </p>
+    </div>
+    <div class="target">
+      <span>file &rarr;</span>
+      <b id="repoLabel">&mdash;</b>
+      <span id="shaLabel">abhi padha nahi</span>
+    </div>
+  </header>
+
+  <div class="cols">
+    <div class="stack">
+
+      <!-- ============================================== connection -->
+      <section class="card">
+        <header>
+          <h2>GitHub</h2>
+          <span class="chip off" id="cConn">padh raha hun&hellip;</span>
+        </header>
+        <div class="rows">
+          <div class="row stacked">
+            <div class="head">
+              <span class="label">
+                <strong>Token</strong>
+                <span>
+                  Sirf save karne ke liye chahiye &mdash; padhne ke liye nahi.
+                  Ye is browser me hi rehta hai, kisi ko bheja nahi jaata,
+                  aur APK me kabhi nahi jaata.
+                </span>
+              </span>
+              <span class="chip off" id="cToken">nahi hai</span>
+            </div>
+            <div class="inline">
+              <input class="txt" id="token" type="password" autocomplete="off"
+                     spellcheck="false" placeholder="github_pat_&hellip;"
+                     style="flex:1 1 220px" aria-label="GitHub token">
+              <button class="btn" type="button" id="saveToken">Rakh lo</button>
+              <button class="btn" type="button" id="forgetToken">Bhool jao</button>
+            </div>
+          </div>
+          <div class="row">
+            <span class="label">
+              <strong>GitHub se dobara padho</strong>
+              <span>Agar kisi aur device se badla ho, ya aap ne abhi file upload ki ho.</span>
+            </span>
+            <button class="btn" type="button" id="reload">Reload</button>
+          </div>
+        </div>
+        <div class="note bad" id="connNote" hidden>
+          <span class="mark">gadbad</span>
+          <span id="connMsg"></span>
+        </div>
+      </section>
+
+      <!-- ============================================ master ads -->
+      <section class="card">
+        <header>
+          <h2>Ads</h2>
+          <span class="chip on" id="cAds">chalu</span>
+        </header>
+        <div class="rows">
+          <div class="row">
+            <span class="label">
+              <strong>Ads on/off</strong>
+              <span>Master kill switch. Band karte hi teeno surfaces gayab &mdash; SDK bhi initialise nahi hoga.</span>
+            </span>
+            <input type="checkbox" class="sw" id="adsOn" aria-label="Ads on/off">
+          </div>
+          <div class="row">
+            <span class="label">
+              <strong>Test mode</strong>
+              <span>Google ki test ids serve karega. Hamesha bharti hain, kamai zero, tap karna safe.</span>
+            </span>
+            <input type="checkbox" class="sw danger" id="testMode" aria-label="Test mode">
+          </div>
+        </div>
+        <div class="note" id="testNote" hidden>
+          <span class="mark">dhyan</span>
+          <span>
+            Test mode <b>on</b> hai &mdash; neeche di gayi real ids abhi use nahi ho rahi.
+            Live users ko bhi test ads dikhengi aur us waqt ki kamai zero hogi.
+          </span>
+        </div>
+      </section>
+
+      <!-- ============================================== ad units -->
+      <section class="card">
+        <header>
+          <h2>Ad units &mdash; teen alag ids</h2>
+          <span class="hint">khaali box = wo ad band</span>
+        </header>
+        <div class="rows" id="units"></div>
+        <div class="note">
+          <span class="mark">kyun</span>
+          <span>
+            AdMob har format ki alag id deta hai. Banner ki id rewarded video
+            serve nahi karegi &mdash; isliye teen alag boxes, ek nahi.
+          </span>
+        </div>
+      </section>
+
+      <!-- ================================================ timing -->
+      <section class="card">
+        <header>
+          <h2>Timing</h2>
+          <span class="hint">minute me</span>
+        </header>
+        <div class="rows">
+          <div class="row">
+            <span class="label">
+              <strong>Interstitial ke beech kam se kam gap</strong>
+              <span>Ek saath 5 entries daalna aam baat hai. Ye floor hi app ko chalne laayak rakhta hai.</span>
+            </span>
+            <input type="number" class="num" id="gap" min="0" max="240" aria-label="Interstitial gap minutes">
+          </div>
+          <div class="row">
+            <span class="label">
+              <strong>Rewarded video ka inaam</strong>
+              <span>Ek video dekhne par kitne minute ad-free milenge. Button par yahi number likha aata hai.</span>
+            </span>
+            <input type="number" class="num" id="free" min="1" max="1440" aria-label="Ad free minutes">
+          </div>
+          <div class="row stacked">
+            <div class="head">
+              <span class="label">
+                <strong>Ad hours</strong>
+                <span>Sirf in ghanton me ads. Band = poora din. Aadhi raat cross karna bhi chalta hai (22 se 6).</span>
+              </span>
+              <input type="checkbox" class="sw" id="hoursOn" aria-label="Ad hours on">
+            </div>
+            <div class="inline" id="hoursRow" hidden>
+              <input type="number" class="num" id="fromH" min="0" max="23" aria-label="Ads se hour">
+              <span>baje se</span>
+              <input type="number" class="num" id="toH" min="0" max="23" aria-label="Ads tak hour">
+              <span>baje tak</span>
+            </div>
+          </div>
+        </div>
+        <div class="note" id="gapNote" hidden>
+          <span class="mark">khatra</span>
+          <span>
+            2 minute se kam gap par ek hi baithak me kai full-screen ads lag sakti hain.
+            Play isi wajah se apps hataata hai.
+          </span>
+        </div>
+      </section>
+
+      <!-- ============================================== features -->
+      <section class="card">
+        <header>
+          <h2>Feature kill switch</h2>
+          <span class="hint">koi feature toot jaaye to yahan se band</span>
+        </header>
+        <div class="rows">
+          <div class="row">
+            <span class="label">
+              <strong>Scanner</strong>
+              <span>Document scan + receipts.</span>
+            </span>
+            <input type="checkbox" class="sw" id="fScanner" aria-label="Scanner">
+          </div>
+          <div class="row">
+            <span class="label">
+              <strong>Invoices</strong>
+              <span>Invoice banana aur PDF export.</span>
+            </span>
+            <input type="checkbox" class="sw" id="fInvoices" aria-label="Invoices">
+          </div>
+          <div class="row">
+            <span class="label">
+              <strong>Google Drive backup</strong>
+              <span>Consent screen ya OAuth me problem aaye to isko band kar dena.</span>
+            </span>
+            <input type="checkbox" class="sw" id="fDrive" aria-label="Drive backup">
+          </div>
+        </div>
+      </section>
+
+      <!-- ================================================ notice -->
+      <section class="card">
+        <header>
+          <h2>Users ko paigham</h2>
+          <span class="chip off" id="cNotice">band</span>
+        </header>
+        <div class="rows">
+          <div class="row">
+            <span class="label">
+              <strong>Notice dikhao</strong>
+              <span>App khulne par ek baar. Band karne ke baad dobara nahi &mdash; jab tak text na badle.</span>
+            </span>
+            <input type="checkbox" class="sw" id="noticeOn" aria-label="Notice on">
+          </div>
+          <div class="row stacked" id="noticeFields" hidden>
+            <input class="txt" id="noticeTitle" placeholder="Title" aria-label="Notice title">
+            <input class="txt" id="noticeBody" placeholder="Paigham" aria-label="Notice text">
+            <div class="inline">
+              <input class="txt" id="noticeBtn" placeholder="Button ka naam"
+                     style="flex:1 1 130px" aria-label="Notice button text">
+              <input class="txt" id="noticeUrl" placeholder="https://&hellip;"
+                     style="flex:2 1 210px" aria-label="Notice button link">
+            </div>
+          </div>
+        </div>
+        <div class="note" id="noticeIdNote" hidden>
+          <span class="mark">id</span>
+          <span>
+            Text badalte hi notice ko nayi id milti hai (<span id="noticeIdVal">&mdash;</span>),
+            isliye jinhone purana band kar diya tha unko naya phir dikhega.
+            Button sirf <b>https://</b> link par aata hai.
+          </span>
+        </div>
+      </section>
+
+      <!-- ================================================= never -->
+      <section class="card">
+        <header>
+          <h2>Ye panel kabhi nahi badal sakta</h2>
+          <span class="hint">inke liye nayi APK chahiye</span>
+        </header>
+        <ul class="never">
+          <li>
+            <span class="no">nahi</span>
+            <span><b>AdMob App ID</b> <code>ca-app-pub-9600735591196781~4983013682</code> &mdash; ye <code>AndroidManifest.xml</code> me baked hai. Nikaal dein to app start hote hi crash karti hai, ads off hone par bhi.</span>
+          </li>
+          <li>
+            <span class="no">nahi</span>
+            <span><b>Naya feature ya nayi screen.</b> Panel sirf un cheezon ko hila sakta hai jo pehle se app me wired hain.</span>
+          </li>
+          <li>
+            <span class="no">nahi</span>
+            <span><b>App icon, naam, version, permissions.</b> Ye sab APK ke andar hain.</span>
+          </li>
+          <li>
+            <span class="no">nahi</span>
+            <span><b>Purani APK wale users.</b> Config padhne wala code jis build me nahi hai, us par ye panel bekaar hai.</span>
+          </li>
+        </ul>
+      </section>
+
+    </div>
+
+    <!-- ================================================ json rail -->
+    <div class="rail">
+      <section class="card">
+        <header>
+          <h2>config.json</h2>
+          <span class="hint" id="bytes">&mdash;</span>
+        </header>
+        <pre class="json" id="out"></pre>
+        <button class="push" type="button" id="pushBtn" disabled>GitHub par bhejo</button>
+        <div class="pushfoot" id="pushMsg">Padha ja raha hai&hellip;</div>
+      </section>
+    </div>
+  </div>
+
+  <footer class="page">
+    Panel aur config ek hi repo me hain, isliye panel apni hi settings edit karta hai.
+    App is file ko har launch par padhta hai &mdash; GitHub ka CDN ~5 minute cache karta
+    hai, to badlav turant nahi, thodi der me pahunchta hai.
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ------------------------------------------------------------ setup */
+
+  var OWNER  = "yasin-rizvi";
+  var REPO   = "expense-monitor-config";
+  var BRANCH = "main";
+  var PATH   = "config.json";
+
+  var API = "https://api.github.com/repos/" + OWNER + "/" + REPO + "/contents/" + PATH;
+  var RAW = "https://raw.githubusercontent.com/" + OWNER + "/" + REPO + "/" + BRANCH + "/" + PATH;
+
+  var TOKEN_KEY = "emcr.token";
+
+  /* Google's own units. Always fill, earn nothing, safe to tap. */
+  var TEST = {
+    banner:       "ca-app-pub-3940256099942544/6300978111",
+    rewarded:     "ca-app-pub-3940256099942544/5224354917",
+    interstitial: "ca-app-pub-3940256099942544/1033173712"
+  };
+
+  /* Must match AdsConfig.defaults in lib/core/services/remote_config.dart.
+     These are what the APK falls back to, so a panel showing anything else
+     would be lying about what phones without this file are doing. */
+  var DEFAULTS = {
+    ads: {
+      on: true,
+      testMode: false,
+      banner:       { on: true, id: "ca-app-pub-9600735591196781/3151057267" },
+      rewarded:     { on: true, id: "ca-app-pub-9600735591196781/9333322232" },
+      interstitial: { on: true, id: "ca-app-pub-9600735591196781/6816688733" },
+      gapMinutes: 3,
+      freeMinutes: 20,
+      fromHour: 0,
+      toHour: 0
+    },
+    features: { scanner: true, invoices: true, driveBackup: true },
+    notice: { id: "", title: "", body: "", buttonText: "", buttonUrl: "" }
+  };
+
+  var UNITS = [
+    { key: "banner",       name: "Banner",       where: "Home screen me sabse upar, balance card ke bhi upar." },
+    { key: "rewarded",     name: "Rewarded",     where: "Home ka ad-free card. Video dekho, kuch minute ke liye ads band." },
+    { key: "interstitial", name: "Interstitial", where: "Entry save karne ke baad, aur dekhi hui entry band karne par." }
+  ];
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  var sha = null;          // the file's blob sha, needed to overwrite it
+  var loaded = false;      // did GitHub ever answer?
+  var noticeSeq = 1;
+  var savedNotice = null;  // the notice text as it is on GitHub right now
+
+  var state = clone(DEFAULTS);
+
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  /* --------------------------------------------------------- token ---- */
+
+  function token() {
+    try { return localStorage.getItem(TOKEN_KEY) || ""; } catch (e) { return ""; }
+  }
+
+  function setToken(value) {
+    try {
+      if (value) localStorage.setItem(TOKEN_KEY, value);
+      else localStorage.removeItem(TOKEN_KEY);
+    } catch (e) { /* private window: the panel still reads, just cannot save */ }
+  }
+
+  /* ---------------------------------------------------------- github -- */
+
+  function headers(extra) {
+    var h = { "Accept": "application/vnd.github+json" };
+    var t = token();
+    if (t) h["Authorization"] = "Bearer " + t;
+    for (var k in extra) h[k] = extra[k];
+    return h;
+  }
+
+  /* Reads through the API rather than raw, because only the API returns the
+     sha — and without the sha the file cannot be overwritten. Unauthenticated
+     reads work on a public repo; the token only widens the rate limit. */
+  async function load() {
+    connBusy();
+    try {
+      var res = await fetch(API + "?ref=" + BRANCH + "&t=" + Date.now(), {
+        headers: headers(), cache: "no-store"
+      });
+
+      if (res.status === 404) {
+        // The repo is there but the file is not. Not an error: this is what
+        // the very first visit looks like, and saving will create it.
+        sha = null;
+        loaded = true;
+        state = clone(DEFAULTS);
+        savedNotice = noticeText();
+        fill();
+        connOk("file abhi nahi hai");
+        note(false);
+        render();
+        return;
+      }
+
+      if (!res.ok) throw new Error(describe(res.status));
+
+      var meta = await res.json();
+      sha = meta.sha || null;
+
+      var text = decode(meta.content || "");
+      var parsed = null;
+      try { parsed = JSON.parse(text); } catch (e) { parsed = null; }
+
+      if (parsed === null) {
+        // A file that is there but unreadable. Say so loudly: the app is
+        // ignoring it too, so the phones are on defaults right now.
+        state = clone(DEFAULTS);
+        connOk("padh li");
+        note(true, "Repo me config.json hai par wo valid JSON nahi hai — app use ignore kar raha hai aur apne defaults par chal raha hai. Yahan se ek baar save kar do, file theek ho jaayegi.");
+      } else {
+        state = merge(parsed);
+        connOk("padh li");
+        note(false);
+      }
+
+      loaded = true;
+      savedNotice = noticeText();
+      fill();
+      render();
+    } catch (err) {
+      loaded = false;
+      connFail();
+      note(true, String(err.message || err));
+      fill();
+      render();
+    }
+  }
+
+  async function save() {
+    if (!token()) { note(true, "Pehle token daal do — bina uske GitHub likhne nahi deta."); return; }
+
+    var btn = $("pushBtn");
+    btn.disabled = true;
+    foot("Bheja ja raha hai…", "");
+
+    var body = JSON.stringify(config(), null, 2) + "\n";
+
+    try {
+      var res = await put(body);
+
+      // Someone else (the other device, or the GitHub site) changed the file
+      // since this page read it. Take the new sha and try once more, rather
+      // than making the user reload and retype everything.
+      if (res.status === 409 || res.status === 422) {
+        await refreshSha();
+        res = await put(body);
+      }
+
+      if (!res.ok) throw new Error(describe(res.status));
+
+      var out = await res.json();
+      sha = (out.content && out.content.sha) || sha;
+      savedNotice = noticeText();
+      $("shaLabel").textContent = "sha " + String(sha).slice(0, 7);
+      foot("Bhej diya. Phones tak 5–15 minute me pahunchega.", "good");
+      note(false);
+    } catch (err) {
+      foot("Nahi bhej saka — " + (err.message || err), "bad");
+    }
+    render();
+  }
+
+  function put(body) {
+    var payload = {
+      message: "Panel: config update",
+      content: encode(body),
+      branch: BRANCH
+    };
+    if (sha) payload.sha = sha;
+
+    return fetch(API, {
+      method: "PUT",
+      headers: headers({ "Content-Type": "application/json" }),
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async function refreshSha() {
+    try {
+      var res = await fetch(API + "?ref=" + BRANCH + "&t=" + Date.now(), {
+        headers: headers(), cache: "no-store"
+      });
+      if (!res.ok) return;
+      var meta = await res.json();
+      sha = meta.sha || null;
+    } catch (e) { /* the retry will fail with its own message */ }
+  }
+
+  function describe(status) {
+    if (status === 401) return "token galat ya expire ho gaya (401)";
+    if (status === 403) return "token ke paas is repo ki ijazat nahi (403) — Contents: read and write chahiye";
+    if (status === 404) return "repo ya branch nahi mila (404) — naam check karo";
+    if (status === 409) return "file abhi abhi kisi aur ne badli (409) — Reload dabao";
+    if (status === 429) return "GitHub ne rok diya, thodi der baad (429)";
+    return "GitHub ne " + status + " kaha";
+  }
+
+  /* base64 that survives Urdu/Hindi text in a notice. btoa alone throws on
+     anything outside Latin-1. */
+  function encode(text) {
+    var bytes = new TextEncoder().encode(text);
+    var bin = "";
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+
+  function decode(b64) {
+    var bin = atob(String(b64).replace(/\s/g, ""));
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+
+  /* ----------------------------------------------------- read config -- */
+
+  /* Same tolerance as the app: anything missing or of the wrong type falls
+     back, so a hand-edited file cannot leave the panel showing nonsense. */
+  function merge(raw) {
+    var out = clone(DEFAULTS);
+    if (!raw || typeof raw !== "object") return out;
+
+    var a = raw.ads;
+    if (a && typeof a === "object") {
+      if (typeof a.on === "boolean") out.ads.on = a.on;
+      if (typeof a.testMode === "boolean") out.ads.testMode = a.testMode;
+      if (typeof a.gapMinutes === "number") out.ads.gapMinutes = clampInt(a.gapMinutes, 0, 240);
+      if (typeof a.freeMinutes === "number") out.ads.freeMinutes = clampInt(a.freeMinutes, 1, 1440);
+      if (typeof a.fromHour === "number") out.ads.fromHour = clampInt(a.fromHour, 0, 23);
+      if (typeof a.toHour === "number") out.ads.toHour = clampInt(a.toHour, 0, 23);
+      UNITS.forEach(function (u) {
+        var unit = a[u.key];
+        if (unit && typeof unit === "object") {
+          if (typeof unit.on === "boolean") out.ads[u.key].on = unit.on;
+          if (typeof unit.id === "string") out.ads[u.key].id = unit.id.trim();
+        }
+      });
+    }
+
+    var f = raw.features;
+    if (f && typeof f === "object") {
+      ["scanner", "invoices", "driveBackup"].forEach(function (k) {
+        if (typeof f[k] === "boolean") out.features[k] = f[k];
+      });
+    }
+
+    var n = raw.notice;
+    if (n && typeof n === "object") {
+      ["id", "title", "body", "buttonText", "buttonUrl"].forEach(function (k) {
+        if (typeof n[k] === "string") out.notice[k] = n[k];
+      });
+    }
+
+    var m = /^n-(\d+)$/.exec(out.notice.id || "");
+    noticeSeq = m ? parseInt(m[1], 10) : 1;
+
+    return out;
+  }
+
+  function clampInt(n, lo, hi) {
+    n = Math.round(n);
+    return n < lo ? lo : (n > hi ? hi : n);
+  }
+
+  /* --------------------------------------------------------- build ---- */
+
+  var rowsHost = $("units");
+
+  UNITS.forEach(function (u) {
+    var row = document.createElement("div");
+    row.className = "row stacked";
+    row.id = "row-" + u.key;
+    row.innerHTML =
+      '<div class="head">' +
+        '<span class="label"><strong>' + u.name + '</strong><span>' + u.where + '</span></span>' +
+        '<span class="chip on" id="chip-' + u.key + '">chalu</span>' +
+        '<input type="checkbox" class="sw" id="on-' + u.key + '" aria-label="' + u.name + ' on">' +
+      '</div>' +
+      '<div class="idline">' +
+        '<span class="pre">id</span>' +
+        '<input class="txt" id="id-' + u.key + '" spellcheck="false" aria-label="' + u.name + ' ad unit id">' +
+      '</div>' +
+      '<div class="serving" id="serving-' + u.key + '"></div>';
+    rowsHost.appendChild(row);
+
+    $("on-" + u.key).addEventListener("change", function (e) {
+      state.ads[u.key].on = e.target.checked;
+      render();
+    });
+    $("id-" + u.key).addEventListener("input", function (e) {
+      state.ads[u.key].id = e.target.value.trim();
+      render();
+    });
+  });
+
+  /* ------------------------------------------------------ bindings ---- */
+
+  function bindSwitch(id, apply) {
+    $(id).addEventListener("change", function (e) { apply(e.target.checked); render(); });
+  }
+
+  function bindNum(id, apply, lo, hi) {
+    $(id).addEventListener("input", function (e) {
+      var n = parseInt(e.target.value, 10);
+      apply(isNaN(n) ? lo : clampInt(n, lo, hi));
+      render();
+    });
+  }
+
+  bindSwitch("adsOn",     function (v) { state.ads.on = v; });
+  bindSwitch("testMode",  function (v) { state.ads.testMode = v; });
+  bindSwitch("fScanner",  function (v) { state.features.scanner = v; });
+  bindSwitch("fInvoices", function (v) { state.features.invoices = v; });
+  bindSwitch("fDrive",    function (v) { state.features.driveBackup = v; });
+
+  bindSwitch("hoursOn", function (v) {
+    if (!v) { state.ads.fromHour = 0; state.ads.toHour = 0; }
+    else if (state.ads.fromHour === state.ads.toHour) {
+      state.ads.fromHour = 8; state.ads.toHour = 23;
+      $("fromH").value = 8; $("toH").value = 23;
+    }
+  });
+
+  bindNum("gap",   function (n) { state.ads.gapMinutes = n; }, 0, 240);
+  bindNum("free",  function (n) { state.ads.freeMinutes = n; }, 1, 1440);
+  bindNum("fromH", function (n) { state.ads.fromHour = n; }, 0, 23);
+  bindNum("toH",   function (n) { state.ads.toHour = n; }, 0, 23);
+
+  bindSwitch("noticeOn", function (v) {
+    if (!v) state.notice = clone(DEFAULTS.notice);
+  });
+
+  ["noticeTitle", "noticeBody", "noticeBtn", "noticeUrl"].forEach(function (id) {
+    $(id).addEventListener("input", function () {
+      state.notice.title = $("noticeTitle").value;
+      state.notice.body = $("noticeBody").value;
+      state.notice.buttonText = $("noticeBtn").value;
+      state.notice.buttonUrl = $("noticeUrl").value.trim();
+      render();
+    });
+  });
+
+  $("saveToken").addEventListener("click", function () {
+    var v = $("token").value.trim();
+    setToken(v);
+    $("token").value = "";
+    render();
+    if (v) load();
+  });
+
+  $("forgetToken").addEventListener("click", function () {
+    setToken("");
+    $("token").value = "";
+    render();
+  });
+
+  $("reload").addEventListener("click", load);
+  $("pushBtn").addEventListener("click", save);
+
+  /* ---------------------------------------------------------- fill ---- */
+
+  /* Pushes state into the controls. Only called after a load, because a
+     control the user is typing in must never be rewritten under them. */
+  function fill() {
+    $("adsOn").checked = state.ads.on;
+    $("testMode").checked = state.ads.testMode;
+    UNITS.forEach(function (u) {
+      $("on-" + u.key).checked = state.ads[u.key].on;
+      $("id-" + u.key).value = state.ads[u.key].id;
+    });
+    $("gap").value = state.ads.gapMinutes;
+    $("free").value = state.ads.freeMinutes;
+
+    var hours = state.ads.fromHour !== state.ads.toHour;
+    $("hoursOn").checked = hours;
+    $("fromH").value = state.ads.fromHour;
+    $("toH").value = state.ads.toHour;
+
+    $("fScanner").checked = state.features.scanner;
+    $("fInvoices").checked = state.features.invoices;
+    $("fDrive").checked = state.features.driveBackup;
+
+    var on = !!(state.notice.title || state.notice.body);
+    $("noticeOn").checked = on;
+    $("noticeTitle").value = state.notice.title;
+    $("noticeBody").value = state.notice.body;
+    $("noticeBtn").value = state.notice.buttonText;
+    $("noticeUrl").value = state.notice.buttonUrl;
+  }
+
+  /* -------------------------------------------------------- config ---- */
+
+  function noticeText() {
+    return [state.notice.title, state.notice.body,
+            state.notice.buttonText, state.notice.buttonUrl].join(" ");
+  }
+
+  function config() {
+    var showing = $("noticeOn").checked && (state.notice.title || state.notice.body);
+
+    // A changed message earns a new id, so phones that dismissed the old one
+    // show this one. An unchanged message keeps its id, so a save that only
+    // touched the ads does not re-show a notice everybody already closed.
+    var id = state.notice.id;
+    if (showing && (!id || noticeText() !== savedNotice)) id = "n-" + (noticeSeq + 1);
+    if (!showing) id = "";
+
+    function unit(key) {
+      return {
+        on: state.ads[key].on && state.ads[key].id.length > 0,
+        id: state.ads[key].id
+      };
+    }
+
+    return {
+      schema: 1,
+      ads: {
+        on: state.ads.on,
+        testMode: state.ads.testMode,
+        banner: unit("banner"),
+        rewarded: unit("rewarded"),
+        interstitial: unit("interstitial"),
+        gapMinutes: state.ads.gapMinutes,
+        freeMinutes: state.ads.freeMinutes,
+        fromHour: state.ads.fromHour,
+        toHour: state.ads.toHour
+      },
+      features: {
+        scanner: state.features.scanner,
+        invoices: state.features.invoices,
+        driveBackup: state.features.driveBackup
+      },
+      notice: showing ? {
+        id: id,
+        title: state.notice.title,
+        body: state.notice.body,
+        buttonText: state.notice.buttonText,
+        buttonUrl: state.notice.buttonUrl
+      } : clone(DEFAULTS.notice)
+    };
+  }
+
+  /* -------------------------------------------------------- render ---- */
+
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function chip(el, cls, text) {
+    el.className = "chip " + cls;
+    el.textContent = text;
+  }
+
+  function connBusy() { chip($("cConn"), "off", "padh raha hun…"); }
+  function connOk(t)  { chip($("cConn"), "on", t); }
+  function connFail() { chip($("cConn"), "dead", "nahi mila"); }
+
+  function note(bad, msg) {
+    $("connNote").hidden = !bad;
+    if (bad) $("connMsg").textContent = msg || "";
+  }
+
+  function foot(msg, cls) {
+    $("pushMsg").textContent = msg;
+    $("pushMsg").className = "pushfoot" + (cls ? " " + cls : "");
+  }
+
+  function render() {
+    var live = state.ads.on;
+
+    chip($("cToken"), token() ? "on" : "off", token() ? "rakha hua" : "nahi hai");
+    $("repoLabel").textContent = OWNER + "/" + REPO + "/" + PATH;
+
+    var c = $("cAds");
+    if (!live) chip(c, "dead", "band");
+    else if (state.ads.testMode) chip(c, "test", "test ids");
+    else chip(c, "on", "chalu");
+
+    $("testNote").hidden = !(state.ads.testMode && live);
+    $("gapNote").hidden = !(live && state.ads.gapMinutes < 2);
+
+    var hours = $("hoursOn").checked;
+    $("hoursRow").hidden = !hours;
+    $("fromH").disabled = !hours;
+    $("toH").disabled = !hours;
+
+    UNITS.forEach(function (u) {
+      var unit = state.ads[u.key];
+      var blank = unit.id.length === 0;
+      var running = unit.on && !blank && live;
+      var el = $("chip-" + u.key);
+
+      if (!live) chip(el, "off", "ads band");
+      else if (blank) chip(el, "dead", "id khaali");
+      else if (!unit.on) chip(el, "off", "band");
+      else if (state.ads.testMode) chip(el, "test", "test");
+      else chip(el, "on", "chalu");
+
+      $("row-" + u.key).classList.toggle("off", !running);
+
+      var serving = $("serving-" + u.key);
+      if (!running) serving.textContent = "kuch serve nahi hoga";
+      else if (state.ads.testMode) serving.innerHTML = "abhi serve ho rahi hai &rarr; <b>" + esc(TEST[u.key]) + "</b> (test)";
+      else serving.textContent = "abhi serve ho rahi hai → " + unit.id;
+    });
+
+    var showing = $("noticeOn").checked && (state.notice.title || state.notice.body);
+    chip($("cNotice"), showing ? "on" : "off", showing ? "dikhega" : "band");
+    $("noticeFields").hidden = !$("noticeOn").checked;
+    $("noticeIdNote").hidden = !$("noticeOn").checked;
+    $("noticeIdVal").textContent = config().notice.id || "—";
+
+    var text = JSON.stringify(config(), null, 2);
+    $("out").innerHTML = esc(text).replace(/"([\w]+)":/g, '<span class="k">"$1"</span>:');
+    $("bytes").textContent = new Blob([text]).size + " bytes";
+
+    var ready = loaded && !!token();
+    $("pushBtn").disabled = !ready;
+    if (!loaded) foot("GitHub se padha nahi ja saka — Reload dabao.", "bad");
+    else if (!token()) foot("Save karne ke liye token chahiye. Upar daal do — ek hi baar.", "");
+    else if ($("pushMsg").className.indexOf("good") === -1) foot("Ek click — file GitHub par chali jaayegi.", "");
+  }
+
+  /* ---------------------------------------------------------- start --- */
+
+  fill();
+  render();
+  load();
+})();
+</script>
+</body>
+</html>
