@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "ads": {
-    "on": true,
-    "testMode": true,
+    "on": false,
+    "testMode": false,
     "banner": {
       "on": true,
       "id": "ca-app-pub-9600735591196781/3151057267"
@@ -23,14 +23,14 @@
   },
   "features": {
     "scanner": true,
-    "invoices": false,
+    "invoices": true,
     "driveBackup": true
   },
   "notice": {
-    "id": "n-2",
-    "title": "update now",
-    "body": "hello everyone lets check letest update",
-    "buttonText": "update",
-    "buttonUrl": "https://www.youtube.com/watch?v=Q8kQdhzE-as"
+    "id": "",
+    "title": "",
+    "body": "",
+    "buttonText": "",
+    "buttonUrl": ""
   }
 }
