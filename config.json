@@ -22,8 +22,8 @@
     "graceDays": 0
   },
   "features": {
-    "scanner": true,
-    "invoices": true,
+    "scanner": false,
+    "invoices": false,
     "driveBackup": true
   },
   "notice": {
