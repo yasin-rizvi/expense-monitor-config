@@ -2,7 +2,7 @@
   "schema": 1,
   "ads": {
     "on": true,
-    "testMode": false,
+    "testMode": true,
     "banner": {
       "on": true,
       "id": "ca-app-pub-9600735591196781/3151057267"
