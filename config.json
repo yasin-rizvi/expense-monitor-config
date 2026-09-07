@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "ads": {
-    "on": true,
-    "testMode": true,
+    "on": false,
+    "testMode": false,
     "banner": {
       "on": true,
       "id": "ca-app-pub-9600735591196781/3151057267"
@@ -16,7 +16,7 @@
       "id": "ca-app-pub-9600735591196781/6816688733"
     },
     "gapMinutes": 3,
-    "freeMinutes": 20,
+    "freeMinutes": 10,
     "fromHour": 0,
     "toHour": 0,
     "graceDays": 0
