@@ -16,14 +16,14 @@
       "id": "ca-app-pub-9600735591196781/6816688733"
     },
     "gapMinutes": 3,
-    "freeMinutes": 10,
+    "freeMinutes": 20,
     "fromHour": 0,
     "toHour": 0,
     "graceDays": 0
   },
   "features": {
-    "scanner": true,
-    "invoices": true,
+    "scanner": false,
+    "invoices": false,
     "driveBackup": true
   },
   "notice": {
