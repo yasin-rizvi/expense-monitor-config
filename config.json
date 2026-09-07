@@ -2,7 +2,7 @@
   "schema": 1,
   "ads": {
     "on": true,
-    "testMode": true,
+    "testMode": false,
     "banner": {
       "on": true,
       "id": "ca-app-pub-9600735591196781/3151057267"
@@ -22,15 +22,15 @@
     "graceDays": 0
   },
   "features": {
-    "scanner": false,
-    "invoices": false,
+    "scanner": true,
+    "invoices": true,
     "driveBackup": true
   },
   "notice": {
-    "id": "n-4",
-    "title": "HI",
-    "body": "JALDI KARO",
-    "buttonText": "now update",
-    "buttonUrl": "https://www.youtube.com/watch?v=Q8kQdhzE-as"
+    "id": "",
+    "title": "",
+    "body": "",
+    "buttonText": "",
+    "buttonUrl": ""
   }
 }
