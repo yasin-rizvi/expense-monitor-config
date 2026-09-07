@@ -535,6 +535,29 @@
         </div>
       </section>
 
+      <!-- ======================================== privacy policy -->
+      <section class="card">
+        <header>
+          <h2>Privacy policy ka link</h2>
+          <span class="hint">Settings &rarr; About me dikhta hai</span>
+        </header>
+        <div class="rows">
+          <div class="row stacked">
+            <input class="txt" id="policyUrl" placeholder="https://&hellip;/privacy.html"
+                   aria-label="Privacy policy URL">
+          </div>
+        </div>
+        <div class="note">
+          <span class="mark">i</span>
+          <span>
+            Sirf <b>https://</b> link chalta hai. Khaali chhodo to app me koi row
+            nahi banti &mdash; aisi row se behtar jo kuch kholti hi na ho.
+            Yahan daalte hi <b>pehle se lagi hui apps</b> me bhi link aa jata hai,
+            nayi APK ke bagair.
+          </span>
+        </div>
+      </section>
+
       <!-- ================================================= never -->
       <section class="card">
         <header>
@@ -632,7 +655,8 @@
       graceDays: 0
     },
     features: { scanner: true, invoices: true, driveBackup: true },
-    notice: { id: "", title: "", body: "", buttonText: "", buttonUrl: "" }
+    notice: { id: "", title: "", body: "", buttonText: "", buttonUrl: "" },
+    privacyPolicyUrl: ""
   };
 
   var UNITS = [
@@ -862,10 +886,28 @@
       });
     }
 
+    /* https only, and a host is required. The app applies the same test and
+       shows no row when it fails, so accepting anything else here would just
+       write a value that quietly does nothing. */
+    if (typeof raw.privacyPolicyUrl === "string") {
+      var u = raw.privacyPolicyUrl.trim();
+      out.privacyPolicyUrl = isHttps(u) ? u : "";
+    }
+
     var m = /^n-(\d+)$/.exec(out.notice.id || "");
     noticeSeq = m ? parseInt(m[1], 10) : 1;
 
     return out;
+  }
+
+  /* One definition, used by both the reader and the writer. Two copies of a
+     rule like this stay identical exactly until the day somebody edits one. */
+  function isHttps(u) {
+    if (typeof u !== "string") return false;
+    var t = u.trim();
+    if (t.slice(0, 8).toLowerCase() !== "https://") return false;
+    var host = t.slice(8).split("/")[0];
+    return host.length > 0 && host.indexOf(" ") === -1;
   }
 
   function clampInt(n, lo, hi) {
@@ -952,6 +994,11 @@
     });
   });
 
+  $("policyUrl").addEventListener("input", function () {
+    state.privacyPolicyUrl = $("policyUrl").value.trim();
+    render();
+  });
+
   $("saveToken").addEventListener("click", function () {
     var v = $("token").value.trim();
     setToken(v);
@@ -999,6 +1046,7 @@
     $("noticeBody").value = state.notice.body;
     $("noticeBtn").value = state.notice.buttonText;
     $("noticeUrl").value = state.notice.buttonUrl;
+    $("policyUrl").value = state.privacyPolicyUrl;
   }
 
   /* -------------------------------------------------------- config ---- */
@@ -1050,7 +1098,11 @@
         body: state.notice.body,
         buttonText: state.notice.buttonText,
         buttonUrl: state.notice.buttonUrl
-      } : clone(DEFAULTS.notice)
+      } : clone(DEFAULTS.notice),
+      /* https only, the same test the app applies. Writing anything else
+         would put a value in the file that the app throws away, and the
+         JSON below is where that has to be visible. */
+      privacyPolicyUrl: isHttps(state.privacyPolicyUrl) ? state.privacyPolicyUrl : ""
     };
   }
 
