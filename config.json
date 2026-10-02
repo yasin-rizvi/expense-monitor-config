@@ -24,7 +24,7 @@
   "features": {
     "scanner": true,
     "invoices": true,
-    "driveBackup": false
+    "driveBackup": true
   },
   "notice": {
     "id": "",
