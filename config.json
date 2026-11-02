@@ -23,7 +23,7 @@
   },
   "features": {
     "scanner": true,
-    "invoices": true,
+    "invoices": false,
     "driveBackup": true
   },
   "notice": {
